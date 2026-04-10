@@ -1,0 +1,5 @@
+# Optional: transformer sentiment (RoBERTa fine-tuned on social text — closer to app reviews than movie reviews).
+# Install: pip install -r requirements-ml.txt
+# First run downloads ~500MB model weights.
+torch>=2.0
+transformers>=4.36

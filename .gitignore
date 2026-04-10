@@ -24,3 +24,6 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Hugging Face model cache (optional local redirect; see README)
+.hf_cache/
