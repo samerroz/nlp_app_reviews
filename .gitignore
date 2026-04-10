@@ -1,0 +1,25 @@
+# Local copies of the full semester project (not part of this repo)
+Big Data in Finance/
+
+# Large raw datasets (keep exports on your machine or shared drive)
+Data/
+
+# Python
+__pycache__/
+*.py[cod]
+.Python
+.venv/
+venv/
+env/
+
+# Environment and secrets (API keys for LLM demos)
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
