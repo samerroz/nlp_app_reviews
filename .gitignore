@@ -1,7 +1,8 @@
 # Local copies of the full semester project (not part of this repo)
 Big Data in Finance/
 
-# Large raw datasets (keep exports on your machine or shared drive)
+# Large raw datasets (keep exports on your machine or shared drive).
+# Named with capital D so it does not clash with any future lowercase paths on case-sensitive systems.
 Data/
 
 # Python
