@@ -1,0 +1,4 @@
+# User-facing PoC dashboard
+# pip install -r requirements-ui.txt
+streamlit>=1.28
+plotly>=5.18

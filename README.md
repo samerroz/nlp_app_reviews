@@ -6,6 +6,10 @@ Course group work: an **NLP-meets-finance** pipeline for organizations that have
 
 **Fictional client story (for slides + demo narration):** [docs/CASE_STUDY.md](docs/CASE_STUDY.md) — **LinguaLoop Ltd.**, qualification, problem, insights, and “what they did next.”
 
+**Course document mapping:** [docs/COURSE_DOCUMENT_OUTLINE.md](docs/COURSE_DOCUMENT_OUTLINE.md) — table of contents vs instructor PDF.
+
+**Demo video script:** [docs/DEMO_VIDEO_SCRIPT.md](docs/DEMO_VIDEO_SCRIPT.md) — 3–5 minute screen recording shot list.
+
 ---
 
 ## Who would use this, and what are they trying to find out?
@@ -45,13 +49,17 @@ Treat it as **who consumes the output**: **finance and operations** care about *
 ```
 ├── README.md                 # This file
 ├── requirements.txt          # Core: pandas, numpy, textblob
+├── requirements-ui.txt       # Streamlit + Plotly (product demo)
 ├── requirements-ml.txt       # Optional: torch + transformers (RoBERTa sentiment)
 ├── requirements-llm.txt      # Optional: OpenAI API for brief polish only
 ├── .gitignore                # Excludes large local data and legacy project copy
-├── docs/                     # Course brief, whiteboard, fictional case study
+├── app/
+│   └── streamlit_app.py      # ReviewSignal UI (upload → dashboard → brief)
+├── docs/                     # Course brief, whiteboard, case study, doc outline, video script
 ├── sample_data/              # Small synthetic CSVs (safe to commit)
 └── src/
-    ├── demo_pipeline.py      # End-to-end PoC: dual sentiment → stats → grounded brief
+    ├── pipeline.py           # Importable engine (used by CLI + Streamlit)
+    ├── demo_pipeline.py      # CLI: sample CSVs → print brief
     ├── sentiment_models.py   # TextBlob + optional RoBERTa → [-1, 1]
     └── llm_brief.py          # Template brief; optional API polish (facts-only)
 ```
@@ -83,6 +91,22 @@ python src/demo_pipeline.py
 ```
 
 **Optional LLM polish** of the same facts (never adds numbers): `pip install -r requirements-llm.txt`, set `OPENAI_API_KEY`, re-run the script.
+
+---
+
+## Product demo (Streamlit)
+
+Install UI dependencies, then start the app from the **repository root** (the folder that contains `app/` and `sample_data/`):
+
+```bash
+pip install -r requirements.txt -r requirements-ui.txt
+# optional: pip install -r requirements-ml.txt
+streamlit run app/streamlit_app.py
+```
+
+In the sidebar: **Load built-in sample data** → **Run analysis**. You should see data health metrics, a dual-sentiment chart, lag-1 correlations, the disagreement queue, and the Markdown brief.
+
+Do **not** paste lines starting with `#` into the shell as commands (zsh will error); either omit comments or run each command separately.
 
 **Why RoBERTa here (not random):** App reviews are **short and informal**; lexicon polarity misses **negation and sarcasm** often. We use `cardiffnlp/twitter-roberta-base-sentiment-latest` (social-style fine-tune), map 3-way probs to **[-1, 1]**, and feed **disagreement** (|TextBlob − RoBERTa|) into the **brief** so leadership **reads the right reviews first**. That ties **NLP depth** directly to the **LLM + finance** story.
 
@@ -146,7 +170,7 @@ The course weights **Application of NLP techniques (35%)** heavily. This repo’
 
 ## Course document checklist
 
-Align the written deliverable with the instructor PDF in `docs/` (title, introduction, context, challenges, objectives, solution, architecture, MVP, Gantt, roles, costs, etc.).
+Use [docs/COURSE_DOCUMENT_OUTLINE.md](docs/COURSE_DOCUMENT_OUTLINE.md) so every bullet from [docs/group-work-information.pdf](docs/group-work-information.pdf) has a paragraph and, where noted, a figure (architecture, UI screenshot, Gantt, costs table).
 
 ---
 
