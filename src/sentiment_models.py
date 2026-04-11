@@ -73,9 +73,29 @@ def transformer_expected_scores(
 def try_transformer_scores(texts: Sequence[str]) -> tuple[np.ndarray | None, str | None]:
     """
     Returns (scores, error_message). If imports or runtime fail, scores is None.
+
+    Error categories:
+    - MISSING_PACKAGES  → torch / transformers not installed
+    - NETWORK_BLOCKED   → HuggingFace download blocked (proxy / firewall / 403)
+    - MODEL_LOAD_ERROR  → packages present but model couldn't load
+    - RUNTIME_ERROR     → anything else
     """
+    try:
+        import torch  # noqa: F401 — check presence before expensive call
+        import transformers  # noqa: F401
+    except ImportError as e:
+        return None, f"MISSING_PACKAGES: {e}"
+
     try:
         scores = transformer_expected_scores(texts)
         return scores, None
     except Exception as e:  # pragma: no cover - env specific
-        return None, f"{type(e).__name__}: {e}"
+        name = type(e).__name__
+        msg = str(e)
+        # HuggingFace hub raises requests.exceptions.ProxyError / HTTPError /
+        # OSError("Offline mode…") when the download is blocked.
+        lower = msg.lower()
+        if any(k in lower for k in ("proxye", "403", "forbidden", "connectionerror",
+                                     "offline mode", "cannot connect", "httperror")):
+            return None, f"NETWORK_BLOCKED: {name}: {msg}"
+        return None, f"RUNTIME_ERROR: {name}: {msg}"

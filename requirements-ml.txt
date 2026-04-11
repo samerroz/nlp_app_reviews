@@ -1,5 +1,7 @@
 # Optional: transformer sentiment (RoBERTa fine-tuned on social text — closer to app reviews than movie reviews).
 # Install: pip install -r requirements-ml.txt
 # First run downloads ~500MB model weights.
+# torchvision: satisfies optional transformers vision submodules (e.g. Streamlit file watcher imports); not required for RoBERTa text scoring itself.
 torch>=2.0
+torchvision>=0.15
 transformers>=4.36

@@ -1,3 +1,4 @@
-# Optional: call an API for executive briefs (otherwise demo uses a deterministic template).
+# Optional: OpenAI-compatible HTTP API (OpenAI, Groq, Together, LM Studio, many gateways).
+# Set OPENAI_API_KEY; optionally OPENAI_BASE_URL and OPENAI_MODEL. Chat works offline without this file.
 # pip install -r requirements-llm.txt
 openai>=1.0

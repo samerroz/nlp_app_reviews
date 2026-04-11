@@ -42,7 +42,20 @@ def main() -> None:
     if result.corr_textblob_lag1 is not None:
         print(f"\nPearson (lag-1 TextBlob vs return): {result.corr_textblob_lag1:.4f}")
     if result.corr_transformer_lag1 is not None:
-        print(f"Pearson (lag-1 RoBERTa vs return): {result.corr_transformer_lag1:.4f}")
+        print(f"\nPearson (lag-1 RoBERTa vs return): {result.corr_transformer_lag1:.4f}")
+
+    if result.regression_full_textblob:
+        print("\n--- Full-sample OLS (TextBlob lag-1, HC3) ---\n", result.regression_full_textblob)
+    if result.regression_full_transformer:
+        print("\n--- Full-sample OLS (RoBERTa lag-1, HC3) ---\n", result.regression_full_transformer)
+
+    if result.holdout_textblob:
+        print("\n--- Chronological holdout OLS (TextBlob, HC3 train) ---\n", result.holdout_textblob)
+    if result.holdout_transformer:
+        print("\n--- Chronological holdout OLS (RoBERTa, HC3 train) ---\n", result.holdout_transformer)
+
+    if result.text_mining:
+        print("\n--- Text mining (flagged reviews) ---\n", result.text_mining)
 
     print("\n--- Grounded brief (template) ---\n")
     print(result.brief_markdown)

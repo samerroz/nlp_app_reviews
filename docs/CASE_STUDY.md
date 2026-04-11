@@ -1,6 +1,6 @@
 # Case study (fictional): **LinguaLoop Ltd.**
 
-Use this narrative in the **presentation** and when walking through the PoC: run the demo, show the brief, then tell **what LinguaLoop did next**.
+Use this narrative in the **presentation** and when walking through the PoC: **landing** → **Run report**, walk the **six tabs**, show the **brief** and **Q&A**, then tell **what LinguaLoop did next**. Slide copy: [PRESENTATION_OUTLINE.md](PRESENTATION_OUTLINE.md).
 
 ---
 
@@ -33,7 +33,7 @@ Use this narrative in the **presentation** and when walking through the PoC: run
 
 - **Product and PR** see review **spikes** after releases but cannot say whether **markets** “care” or whether noise is just **always-on complaining**.  
 - **IR** gets analyst questions tying **app ratings** to **the stock**; they need **repeatable** evidence and **cited examples**, not anecdotes.  
-- **Leadership** wants one **weekly brief**: sentiment trend, link to returns (with caveats), and **which reviews to read first**.
+- **Leadership** wants one **weekly brief**: sentiment trend, link to returns (with caveats), and **which reviews to read first** — the kind of output **ReviewSignal** puts in **Overview**, **Market & stats**, **Reviews**, and **Brief** after a single **Run report** from the app’s **landing page**.
 
 ---
 
@@ -52,7 +52,7 @@ Use this narrative in the **presentation** and when walking through the PoC: run
    - Build **daily** sentiment series, **merge** with returns, use **lags** (e.g. yesterday’s sentiment vs today’s return) and report **correlation / regression** with honest **association ≠ causation** language.
 
 3. **LLM layer (grounded)**  
-   - The model does **not** invent statistics. It receives **our tables + a few retrieved quotes** (especially **high-disagreement** reviews) and produces a **one-page executive brief** for IR/product.
+   - The model does **not** invent statistics. It receives **our tables + a few retrieved quotes** (especially **high-disagreement** reviews) and produces a **one-page executive brief** for IR/product. **Q&A** in the app answers questions from the **same frozen snapshot** of the run.
 
 ---
 

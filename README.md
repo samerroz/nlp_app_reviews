@@ -1,8 +1,10 @@
-# NLP App Reviews × Market Data — Group Project
+# ReviewSignal — NLP app reviews × market data (group project)
 
-Course group work: an **NLP-meets-finance** pipeline for organizations that have **large volumes of user text** (e.g. app store reviews) and **market or internal financial series**, and need a **repeatable** way to **score sentiment**, **quantify association with returns or risk**, and (in the full design) **turn results into a short executive brief** with an LLM.
+Course group work: **ReviewSignal**, an **NLP-meets-finance** proof of concept for teams that have **large volumes of user text** (e.g. app store reviews) and **daily market returns**, and need a **repeatable** way to **measure mood over time**, **check honest alignment with returns** (association, not prediction), **prioritize which reviews humans read first** (especially when scorers disagree), and **ship an evidence pack** — insights, **executive brief**, **PDF/CSV**, and **grounded Q&A**.
 
 **Remote:** [github.com/samerroz/nlp_app_reviews](https://github.com/samerroz/nlp_app_reviews)
+
+**Presentation deck (plain text, copy to Word/Slides):** [docs/PRESENTATION_OUTLINE.md](docs/PRESENTATION_OUTLINE.md) — title through objectives, solution, demo flow, limitations, FAQ.
 
 **Fictional client story (for slides + demo narration):** [docs/CASE_STUDY.md](docs/CASE_STUDY.md) — **LinguaLoop Ltd.**, qualification, problem, insights, and “what they did next.”
 
@@ -26,7 +28,7 @@ Course group work: an **NLP-meets-finance** pipeline for organizations that have
 
 > “When daily average review sentiment drops sharply after a release, do we tend to see **worse next-day returns** or **higher realized volatility** more often than chance? If so, how strong is the link, and what did users actually say on those days?”
 
-That is **correlation / predictive association** with careful wording (not claiming causality). The **LLM** layer answers the last part: **summarize themes** from retrieved reviews **given** numbers your pipeline already computed.
+That is **correlation / association** with careful wording (not claiming causality). The **LLM** layer **explains and phrases** what the pipeline already computed — it does **not** invent statistics; **grounded chat** uses the same idea for Q&A.
 
 ---
 
@@ -48,23 +50,27 @@ Treat it as **who consumes the output**: **finance and operations** care about *
 
 ```
 ├── README.md                 # This file
-├── requirements.txt          # Core: pandas, numpy, textblob
+├── requirements.txt          # Core: pandas, numpy, textblob, statsmodels, scikit-learn
 ├── requirements-ui.txt       # Streamlit + Plotly (product demo)
 ├── requirements-ml.txt       # Optional: torch + transformers (RoBERTa sentiment)
 ├── requirements-llm.txt      # Optional: OpenAI API for brief polish only
 ├── .gitignore                # Excludes large local data and legacy project copy
 ├── app/
-│   └── streamlit_app.py      # ReviewSignal UI (upload → dashboard → brief)
+│   └── streamlit_app.py      # ReviewSignal UI (landing → Run report → six-tab dashboard)
 ├── docs/                     # Course brief, whiteboard, case study, doc outline, video script
 ├── sample_data/              # Synthetic CSVs: micro tutorial + extended demo (~90 days)
 ├── scripts/
-│   └── generate_realistic_sample.py   # Regenerate reviews_demo.csv / market_demo.csv
+│   └── generate_realistic_sample.py   # Synthetic CSVs; `--days`, `--reviews-min/max`, `--out-*`
 └── src/
     ├── pipeline.py           # Importable engine (used by CLI + Streamlit)
     ├── demo_pipeline.py      # CLI: sample CSVs → print brief
     ├── insights.py           # Rule-based actionable insight bullets
-    ├── report_pdf.py         # PDF export (fpdf2)
+    ├── report_pdf.py         # PDF export (fpdf2); page 2 = regression + text mining
     ├── sentiment_models.py   # TextBlob + optional RoBERTa → [-1, 1]
+    ├── time_series_eval.py   # Expanding/rolling r; holdout OLS; full-sample HC3 OLS + CI
+    ├── text_mining.py        # Bigrams + NMF on disagreement / extreme-return reviews only
+    ├── csv_infer.py          # Heuristic column detection for messy exports
+    ├── llm_chat.py           # Grounded chat context JSON + optional OpenAI
     └── llm_brief.py          # Template brief; optional API polish (facts-only)
 ```
 
@@ -72,6 +78,7 @@ Treat it as **who consumes the output**: **finance and operations** care about *
 
 - `Big Data in Finance/` — full previous-semester tree; keep on disk for reference, do not push.
 - `Data/` — large review + market CSVs (~200MB+); team members download or share separately.
+- `.cache/` — optional **large synthetic** demo CSVs from `scripts/generate_realistic_sample.py` (gitignored).
 
 ---
 
@@ -94,11 +101,11 @@ export HF_HOME="$(pwd)/.hf_cache"
 python src/demo_pipeline.py
 ```
 
-**Optional LLM polish** of the same facts (never adds numbers): `pip install -r requirements-llm.txt`, set `OPENAI_API_KEY`, re-run the script.
+**Optional LLM** — same facts only: `pip install -r requirements-llm.txt`, set `OPENAI_API_KEY` for **brief polish** (CLI) or **grounded chat** in Streamlit (stub replies if unset).
 
 ---
 
-## Product demo (Streamlit)
+## Product demo (Streamlit — ReviewSignal)
 
 Install UI dependencies, then start the app from the **repository root** (the folder that contains `app/` and `sample_data/`):
 
@@ -108,7 +115,11 @@ pip install -r requirements.txt -r requirements-ui.txt
 streamlit run app/streamlit_app.py
 ```
 
-In the sidebar: **Extended demo** (~90 trading days, ~1.1k synthetic reviews) → **Run analysis**. You get data health, dual-sentiment chart, lag-1 correlations, **actionable insight bullets**, disagreement queue, Markdown brief, and **Download PDF report** (plus CSV of the queue). Use **Micro tutorial** only for a quick UI smoke test.
+**Dev note:** `.streamlit/config.toml` sets `fileWatcherType = "none"` so Streamlit does not walk every `transformers` vision submodule (which would otherwise spam `torchvision` import errors in the terminal). Use **Rerun** in the app after code edits, or temporarily set `fileWatcherType = "auto"` if you want live reload.
+
+**Flow:** The app opens on a **landing page** (full-width layout, presentation-style palette). The **LinguaLoop built-in demo** (~90 trading days) **loads automatically**. Enter or keep the **company name**, adjust options if needed, then click **Run report** (no CSV upload required for class). Upload **both** CSVs on the landing page when you want **your own exports**. The app **guesses columns** (override under **Advanced** if needed). **RoBERTa** defaults to **off**; turn it on after `pip install -r requirements-ml.txt`.
+
+**After a successful run** you get a **six-tab dashboard**: **Overview** (data health, downloads, plain-language bullets), **Market & stats** (dual sentiment, Pearson + **OLS (HC3) + CI**, stability, holdout), **Reviews** (disagreement queue), **Themes** (bigrams + NMF on flagged text), **Brief** (markdown + optional API polish + technical notes), **Q&A** (grounded chat). Use **Back to start** to return to the landing page. **PDF** (page 2 = quant + mining) and **CSV** exports live on **Overview**. To stress-test scale locally, run `python scripts/generate_realistic_sample.py --days 500 ...` (writes to `.cache/` if you choose).
 
 Do **not** paste lines starting with `#` into the shell as commands (zsh will error); either omit comments or run each command separately.
 
@@ -138,10 +149,10 @@ The course weights **Application of NLP techniques (35%)** heavily. This repo’
 
 **Further upgrades if you want “Excellent” depth**
 
-- Add **one** of: **topic modeling** (NMF/LDA/BERTopic) or **aspect** buckets (bugs / billing / UX) on **flagged** days only.
-- Optional: **named-entity** or **keyword** tags for product areas.
+- **Aspect** buckets (bugs / billing / UX) or **BERTopic** on flagged days — the repo already ships **bigrams + NMF** on the disagreement / tail-return corpus.
+- Optional: **named-entity** tags for product areas.
 
-**Bottom line:** Name the **dual sentiment + disagreement → brief** path explicitly in **Architecture** and **Solution approach**; optional topics/aspects become your stretch goal.
+**Bottom line:** Name the **dual sentiment + disagreement → quant + flagged text mining → brief / grounded Q&A** path explicitly in **Architecture** and **Solution approach**. Objectives O1–O4 in [docs/PRESENTATION_OUTLINE.md](docs/PRESENTATION_OUTLINE.md) map directly to tabs and exports.
 
 ---
 
@@ -154,7 +165,7 @@ The course weights **Application of NLP techniques (35%)** heavily. This repo’
 1. **Ingest** — They drop (or you pre-load) `reviews.csv` + `market.csv` matching the formats in `sample_data/` (or your real `Data/` locally for the live presentation).
 2. **NLP** — Table or chart: **per-review scores** and **daily average sentiment** (−1…1) over time; optional second panel if you add topics/aspects.
 3. **Quant** — One screen with **lagged correlation / regression summary** and a **plain-language** interpretation (“association, not causation”).
-4. **Grounded brief** — Button **“Generate executive summary”**: LLM output that **only restates your numbers** and **quotes 3–5 short review excerpts** you pass in (no free-form inventing of statistics).
+4. **Grounded brief** — Produced on each **Run report** (optional **polish** toggle if an API key is set): wording may be refined, but **facts come from the pipeline**, not from free invention of statistics. **Q&A** uses the same **grounded** rule set.
 
 **What it should look like (recommended formats)**
 
@@ -181,3 +192,21 @@ Use [docs/COURSE_DOCUMENT_OUTLINE.md](docs/COURSE_DOCUMENT_OUTLINE.md) so every 
 ## Team
 
 Group project — replace with names and roles as you finalize.
+
+---
+
+## Evaluation methodology (for the course report)
+
+**No random train/test split** on days (that would leak future information). We use:
+
+1. **Expanding-window correlation:** at each date, Pearson *r* between lag-1 daily sentiment and same-day return using **all history from the start** through that date (after a minimum number of points).
+2. **Rolling-window correlation (20 trading days):** same *r* but using **only the last 20 days** ending at each date — highlights **short-run instability**.
+3. **Pseudo-forecasting / chronological holdout:** fit `return ~ lag-1_sentiment + const` with **OLS and HC3 robust standard errors** on the **early** segment; hold out the **last ~20%** of days (min 8) **in calendar order**. Report train **p-value** on the slope, and on the holdout **corr(predicted, actual)** and **RMSE**. This is a **sanity check**, not a trading backtest.
+
+4. **Full-sample OLS (HC3)** on the same lagged panel reports **slope, 95% Wald CI, p-value, R²** for finance-style language alongside Pearson *r*.
+
+5. **Text mining** (bigrams + small **NMF**) runs only on a **flagged** subset: high **disagreement** reviews plus text on **extreme return** days — not global LDA on all reviews.
+
+6. **Grounded LLM chat** in Streamlit embeds a **frozen JSON** snapshot of the run; the model is instructed **not** to invent statistics (optional `OPENAI_API_KEY`).
+
+**Large local CSVs:** Place files such as `sample_data/local_reviews.csv` and `sample_data/local_market.csv` on your machine — paths are **gitignored**; use **Upload** on the **landing page** for class demos without committing proprietary data. Optional **large synthetic** pairs live under **`.cache/`** (also gitignored) via `scripts/generate_realistic_sample.py`.

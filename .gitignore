@@ -5,6 +5,10 @@ Big Data in Finance/
 # Named with capital D so it does not clash with any future lowercase paths on case-sensitive systems.
 Data/
 
+# Large local demo CSVs (do not commit; use Upload in Streamlit)
+sample_data/local_*.csv
+data/local/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -27,3 +31,6 @@ env/
 
 # Hugging Face model cache (optional local redirect; see README)
 .hf_cache/
+
+# Streamlit / local large synthetic demos (optional)
+.cache/

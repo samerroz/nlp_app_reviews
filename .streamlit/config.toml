@@ -1,0 +1,13 @@
+# ReviewSignal — dark theme (navy + teal)
+[theme]
+base = "dark"
+primaryColor = "#14b8a6"
+backgroundColor = "#020617"
+secondaryBackgroundColor = "#0f172a"
+textColor = "#e2e8f0"
+font = "sans serif"
+
+[server]
+headless = true
+# Reduces noisy imports of transformers vision submodules during dev
+fileWatcherType = "none"
