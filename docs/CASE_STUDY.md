@@ -86,4 +86,6 @@ Use this narrative in the **presentation** and when walking through the PoC: run
 
 ---
 
+**Demo data:** The public **Extended demo** uses ticker **LLGL** and ~90 trading days of synthetic reviews and returns so the UI resembles a pilot — not LinguaLoop’s real books.
+
 _Fictional company for pedagogy; not affiliated with any real issuer._

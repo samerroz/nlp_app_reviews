@@ -20,12 +20,21 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from insights import actionable_insights  # noqa: E402
 from pipeline import run_pipeline  # noqa: E402
+from report_pdf import build_pdf_bytes  # noqa: E402
 
 
-def load_sample_pair() -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_micro_sample() -> tuple[pd.DataFrame, pd.DataFrame]:
     rev = pd.read_csv(ROOT / "sample_data" / "reviews_sample.csv")
     mkt = pd.read_csv(ROOT / "sample_data" / "market_sample.csv")
+    return rev, mkt
+
+
+def load_demo_sample() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """~90 trading days, ~1.1k reviews — feels like a real pilot window."""
+    rev = pd.read_csv(ROOT / "sample_data" / "reviews_demo.csv")
+    mkt = pd.read_csv(ROOT / "sample_data" / "market_demo.csv")
     return rev, mkt
 
 
@@ -56,7 +65,7 @@ def fig_dual_sentiment(merged: pd.DataFrame) -> go.Figure:
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         yaxis_title="Sentiment",
         xaxis_title="Date",
-        height=400,
+        height=420,
         template="plotly_white",
     )
     return fig
@@ -73,7 +82,7 @@ def main() -> None:
     st.title("ReviewSignal")
     st.caption(
         "Upload **review exports** + **daily returns** to get dual NLP sentiment, lag-1 association, "
-        "and a **grounded** executive brief (template; optional API polish)."
+        "**actionable insights**, a **grounded** brief, and **PDF export**."
     )
 
     if "result" not in st.session_state:
@@ -85,11 +94,19 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Run")
-        company = st.text_input("Company name (for brief)", value="LinguaLoop Ltd.")
-        use_sample = st.button("Load built-in sample data", use_container_width=True)
-        if use_sample:
-            st.session_state.reviews_df, st.session_state.market_df = load_sample_pair()
-            st.success("Sample loaded.")
+        company = st.text_input("Company name (for brief + PDF)", value="LinguaLoop Ltd.")
+
+        st.subheader("Built-in data")
+        st.caption("**Extended demo** ≈ 90 trading days / ~1.1k reviews (realistic pilot). **Micro** = tiny tutorial set.")
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("Extended demo", use_container_width=True, type="primary"):
+                st.session_state.reviews_df, st.session_state.market_df = load_demo_sample()
+                st.success("Loaded extended demo.")
+        with c2:
+            if st.button("Micro tutorial", use_container_width=True):
+                st.session_state.reviews_df, st.session_state.market_df = load_micro_sample()
+                st.success("Loaded micro sample.")
 
         st.divider()
         st.subheader("Or upload CSVs")
@@ -155,7 +172,7 @@ def main() -> None:
 
     if run:
         if reviews_df is None or market_df is None:
-            st.error("Load sample data or upload both CSVs.")
+            st.error("Load extended/micro demo or upload both CSVs.")
         else:
             with st.spinner("Scoring reviews and merging with market data…"):
                 try:
@@ -182,8 +199,10 @@ def main() -> None:
 
     res = st.session_state.result
     if res is None:
-        st.info("Load data in the sidebar, then click **Run analysis**.")
+        st.info("Click **Extended demo** (recommended), then **Run analysis** — or upload your own exports.")
         return
+
+    insight_lines = actionable_insights(res)
 
     st.subheader("Data health")
     c1, c2, c3, c4 = st.columns(4)
@@ -191,6 +210,30 @@ def main() -> None:
     c2.metric("Overlapping trading days", res.overlap_days)
     c3.metric("Review span", f"{res.stats['date_min']} → {res.stats['date_max']}")
     c4.metric("Overlap window", f"{res.date_overlap_min or '—'} → {res.date_overlap_max or '—'}")
+
+    exp1, exp2 = st.columns(2)
+    with exp1:
+        try:
+            pdf_bytes = build_pdf_bytes(company, res, insight_lines)
+            st.download_button(
+                label="Download PDF report",
+                data=pdf_bytes,
+                file_name="reviewsignal_report.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.warning(f"PDF export unavailable ({e}). Check `pip install -r requirements-ui.txt`.")
+    with exp2:
+        if res.disagreement_quotes:
+            dq_csv = pd.DataFrame(res.disagreement_quotes).to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="Download disagreement queue (CSV)",
+                data=dq_csv,
+                file_name="disagreement_queue.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
 
     if res.transformer_error:
         st.warning(
@@ -211,10 +254,18 @@ def main() -> None:
         "Pearson · RoBERTa",
         f"{res.corr_transformer_lag1:.4f}" if res.corr_transformer_lag1 is not None else "n/a",
     )
-    st.caption(
-        "Association is not causation. Small samples give unstable correlations — fine for workflow demo; "
-        "cite your long-sample study in the course document."
-    )
+    if res.overlap_days < 30:
+        st.caption(
+            "Very few overlapping days — correlations are **unstable**. Use **Extended demo** or your full export for a believable read."
+        )
+    else:
+        st.caption(
+            "Association is not causation. Extended demo is **synthetic** but sized like a pilot; cite **robust** methods on real data in your write-up."
+        )
+
+    st.subheader("Actionable insights")
+    for line in insight_lines:
+        st.markdown(f"- {line}")
 
     st.subheader("Read these first (largest TextBlob vs RoBERTa gap)")
     if res.disagreement_quotes:

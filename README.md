@@ -56,10 +56,14 @@ Treat it as **who consumes the output**: **finance and operations** care about *
 ├── app/
 │   └── streamlit_app.py      # ReviewSignal UI (upload → dashboard → brief)
 ├── docs/                     # Course brief, whiteboard, case study, doc outline, video script
-├── sample_data/              # Small synthetic CSVs (safe to commit)
+├── sample_data/              # Synthetic CSVs: micro tutorial + extended demo (~90 days)
+├── scripts/
+│   └── generate_realistic_sample.py   # Regenerate reviews_demo.csv / market_demo.csv
 └── src/
     ├── pipeline.py           # Importable engine (used by CLI + Streamlit)
     ├── demo_pipeline.py      # CLI: sample CSVs → print brief
+    ├── insights.py           # Rule-based actionable insight bullets
+    ├── report_pdf.py         # PDF export (fpdf2)
     ├── sentiment_models.py   # TextBlob + optional RoBERTa → [-1, 1]
     └── llm_brief.py          # Template brief; optional API polish (facts-only)
 ```
@@ -104,7 +108,7 @@ pip install -r requirements.txt -r requirements-ui.txt
 streamlit run app/streamlit_app.py
 ```
 
-In the sidebar: **Load built-in sample data** → **Run analysis**. You should see data health metrics, a dual-sentiment chart, lag-1 correlations, the disagreement queue, and the Markdown brief.
+In the sidebar: **Extended demo** (~90 trading days, ~1.1k synthetic reviews) → **Run analysis**. You get data health, dual-sentiment chart, lag-1 correlations, **actionable insight bullets**, disagreement queue, Markdown brief, and **Download PDF report** (plus CSV of the queue). Use **Micro tutorial** only for a quick UI smoke test.
 
 Do **not** paste lines starting with `#` into the shell as commands (zsh will error); either omit comments or run each command separately.
 

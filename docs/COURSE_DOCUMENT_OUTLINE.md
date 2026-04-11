@@ -15,7 +15,7 @@ Use [group-work-information.pdf](group-work-information.pdf) as the master check
 | **How the solution solves the problem** | Shared daily signal; dual scorer for triage; association for IR/product prioritization; brief for leadership. | Before/after narrative (LinguaLoop). |
 | **Expected results** | Demo: correlations + disagreement table + brief on `sample_data/`; research: cite multi-firm / long-window work offline (Big Data folder, not in repo). | Table of metrics from one run. |
 | **Project approach** | Iterations: document problem → implement engine → UI → rehearse presentation. | — |
-| **MVP or PoC** | `streamlit run app/streamlit_app.py` + `python src/demo_pipeline.py`. | Screenshot + 1-paragraph limitation statement. |
+| **MVP or PoC** | `streamlit run app/streamlit_app.py` + `python src/demo_pipeline.py`; **Extended demo** dataset; **PDF export** + insight bullets. | Screenshot + PDF sample + limitation statement. |
 | **Project stages** | e.g. (1) Requirements (2) NLP engine (3) Quant merge (4) UI (5) Brief/LLM (6) Doc & deck. | Gantt (next section). |
 | **Tasks definition** | Split: NLP, frontend, stats, writing, slides, recording. | Task list with owners. |
 | **Team and estimated work** | Hours per person × weeks (honest student estimates). | — |
